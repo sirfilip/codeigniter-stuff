@@ -3,11 +3,13 @@
 
 class MY_Model extends CI_Model {
 	
-	protected $table = NULL;
+	protected $_table = NULL;
+	
+	protected $_primary_key = 'id';
 	
 	function all($offset, $limit)
 	{
-		$query = $this->db->limit($limit)->offset($offset)->get($this->table);
+		$query = $this->db->limit($limit)->offset($offset)->get($this->_table);
 		if ($query->num_rows() > 0)
 		{
 			return $query->result(get_class($this));
@@ -23,7 +25,7 @@ class MY_Model extends CI_Model {
 		if ($limit) $this->db->limit($limit);
 		if ($offset) $this->db->offset($offset);
 		
-		$query = $this->db->where($where)->get($this->table);
+		$query = $this->db->where($where)->get($this->_table);
 		
 		if ($query->num_rows() > 0)
 		{
@@ -37,7 +39,7 @@ class MY_Model extends CI_Model {
 	
 	function find($where)
 	{
-		$query = $this->db->where($where)->limit(1)->get($this->table);
+		$query = $this->db->where($where)->limit(1)->get($this->_table);
 		if ($query->num_rows() > 0)
 		{
 			return $query->row(0, get_class($this));
@@ -64,30 +66,30 @@ class MY_Model extends CI_Model {
 	
 	function find_by_id($id)
 	{
-		return $this->find(array('id' => $id));
+		return $this->find(array($this->_primary_key => $id));
 	}
 	
 	function create($props)
 	{
-		$this->db->insert($this->table, $props);
+		$this->db->insert($this->_table, $props);
 		return $this->db->insert_id();
 	}
 	
 	function update($id, $props)
 	{
-		$this->db->where('id', $id)
-				 ->update($this->table, $props);
+		$this->db->where($this->_primary_key, $id)
+				 ->update($this->_table, $props);
 	}
 	
 	function delete($id)
 	{
-		$this->db->where('id', $id)
-				 ->delete($this->table);
+		$this->db->where($this->_primary_key, $id)
+				 ->delete($this->_table);
 	}
 	
 	function count()
 	{
-		return $this->db->count_all($this->table);
+		return $this->db->count_all($this->_table);
 	}
 
 

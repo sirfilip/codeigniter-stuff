@@ -2,8 +2,6 @@
 
 class MY_Controller extends CI_Controller {
 
-  protected $layout = 'template';
-
   public function __construct()
   {
     parent::__construct();
@@ -21,7 +19,7 @@ class MY_Controller extends CI_Controller {
     if (method_exists($this, $action))
     {
       $this->before();    
-      return call_user_func_array(array($this, $action), $arguments);
+      call_user_func_array(array($this, $action), $arguments);
       $this->after();
     }
     
