@@ -13,6 +13,7 @@ class Assets {
     
     function __construct($config = array())
     {
+        get_instance()->load->helper('url');
         $this->initialize($config);
     }
     
@@ -25,7 +26,7 @@ class Assets {
     function css($filename, $attrs = array())
     {
         $file_path = $this->config['assets_path'].$this->config['styles_folder'].$filename; 
-        $file_url  = $this->config['assets_url'].$this->config['styles_folder'].$filename.'?'.filemtime($file_path); 
+        $file_url  = base_url($this->config['assets_url'].$this->config['styles_folder'].$filename).'?'.filemtime($file_path); 
         $this->styles[] = '<link type="text/css" rel="stylesheet" 
                            href="'.$file_url.'" '.$this->attrs_to_html($attrs).'/>';
         return $this;
@@ -34,7 +35,7 @@ class Assets {
     function js($filename)
     {
         $file_path = $this->config['assets_path'].$this->config['scripts_folder'].$filename; 
-        $file_url  = $this->config['assets_url'].$this->config['scripts_folder'].$filename.'?'.filemtime($file_path);
+        $file_url  = base_url($this->config['assets_url'].$this->config['scripts_folder'].$filename).'?'.filemtime($file_path);
         $this->scripts[] = '<scrypt type="text/javascript" src="'.$file_url.'"></script>';
         return $this;
     }
