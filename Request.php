@@ -9,19 +9,17 @@ class Request {
 	{
 		$this->CI =& get_instance();
 	}
+
+    function detect_http_method()
+    {
+        $method = $this->CI->input->post(self::METHOD_HINT) ? $this->CI->input->post(self::METHOD_HINT) : $_SERVER['REQUEST_METHOD'];
+        return strtolower($method);
+    }
 	
 	function is_http_method($method)
 	{
-		$method = strtoupper($method);
-		$method_hint = $this->CI->input->post(self::METHOD_HINT); 
-		if ($method_hint)
-		{
-			return strtoupper($method_hint) === $method; 
-		}
-		else
-		{
-			return strtoupper($_SERVER['REQUEST_METHOD']) === $method;
-		}
+		$method = strtolower($method);
+        return $method === $this->detect_http_method();
 	}
 	
 	function is_get()
