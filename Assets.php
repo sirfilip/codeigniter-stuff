@@ -36,7 +36,7 @@ class Assets {
     {
         $file_path = $this->config['assets_path'].$this->config['scripts_folder'].$filename; 
         $file_url  = base_url($this->config['assets_url'].$this->config['scripts_folder'].$filename).'?'.filemtime($file_path);
-        $this->scripts[] = '<scrypt type="text/javascript" src="'.$file_url.'"></script>';
+        $this->scripts[] = '<script type="text/javascript" src="'.$file_url.'"></script>';
         return $this;
     }
     
