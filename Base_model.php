@@ -202,7 +202,7 @@ class Base_model {
 	{
 		$data = $this->_data;
 		$this->db()->insert($this->_table, $data);
-		$this->{$this->_primary_key} = $this->db()->last_insert_id();
+		$this->{$this->_primary_key} = $this->db()->insert_id();
 	}
 	
 	protected function update() 
