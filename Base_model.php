@@ -90,9 +90,9 @@ class Base_model {
 	
 	function update_attributes($attributes = array())
 	{
-		foreach ($this->_attr_accessible as $key => $value)
+		foreach ($this->_attr_accessible as $key)
 		{
-			if (array_key_exists($key, $attributes)) $this->_data[$key] = $value;
+			if (array_key_exists($key, $attributes)) $this->_data[$key] = $attributes[$key];
 		}
 		return $this;
 	}
@@ -148,19 +148,19 @@ class Base_model {
 	
 	function has_errors()
 	{
-		return ! is_valid();
+		return ! empty($this->_errors);
 	}
 	
 	function is_valid()
 	{
-		return empty($this->_errors);
+		return $this->validate();
 	}
 	
 	function rules()
 	{
 		if ($this->is_new_record())
 		{
-			return $this->_rules();
+			return $this->_rules;
 		}
 		else
 		{
@@ -178,24 +178,24 @@ class Base_model {
 	
 	function validate()
 	{
-		$_POST = $this->is_new_record() ? $this->_data : $_POST = $this->_updated_fields;    
+		$_POST = $this->is_new_record() ? $this->_data : $this->_updated_fields;    
 		$this->CI->load->library('form_validation');
 		$this->CI->form_validation->set_rules($this->rules());
-		if ($this->form_validation->run())
+		if ($this->CI->form_validation->run())
 		{
 			$this->_errors = array();
 			return TRUE;
 		}
 		else
 		{
-			$this->_errors = $this->from_validation->errors();
+			$this->_errors = $this->CI->form_validation->errors();
 			return FALSE;
 		}
 	}
 	
 	function errors()
 	{
-		return $this->_errors();
+		return $this->_errors;
 	}
 	
 	protected function create() 
