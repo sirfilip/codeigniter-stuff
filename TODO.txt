@@ -1,0 +1,2 @@
+1. Write form_for helper similar to rails
+2. Write form builder class that will build forms from templates.
