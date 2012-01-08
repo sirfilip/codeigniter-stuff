@@ -92,7 +92,7 @@ class Base_model {
 	{
 		foreach ($this->_attr_accessible as $key)
 		{
-			if (array_key_exists($key, $attributes)) $this->_data[$key] = $attributes[$key];
+			if (array_key_exists($key, $attributes)) $this->{$key} = $attributes[$key];
 		}
 		return $this;
 	}
@@ -208,7 +208,7 @@ class Base_model {
 	protected function update() 
 	{
 		$data = $this->_updated_fields;
-		$this->db()->update($this->_table, $data, array($this->_primary_key, $this->{$this->_primary_key}));
+		$this->db()->where($this->_primary_key, $this->{$this->_primary_key})->update($this->_table, $data);
 	}
 	
 	function delete()
