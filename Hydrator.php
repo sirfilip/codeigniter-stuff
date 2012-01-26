@@ -15,7 +15,7 @@ class Hydrator {
 			if (array_key_exists($related, $sample->belongs_to()))
 			{
 				$belongs_to = $sample->belongs_to(); 
-				$objects = $this->hydrate_belongs_to($related, $belongs_to[$related], $objects);
+				$objects = $this->hydrate_belongs_to($related,$belongs_to[$related], $objects);
 			}
 
 			if (array_key_exists($related, $sample->has_many()))
@@ -36,8 +36,8 @@ class Hydrator {
 
 	function hydrate_belongs_to($alias, $relation, $objects) 
 	{
-		require_once APPPATH."models/{$relation['model']}.php";
 		$ci = get_instance();
+		$ci->load->model($relation['model']);
 		$related_ids = array();
 		foreach ($objects as $object)
 		{
@@ -74,8 +74,8 @@ class Hydrator {
 
 	function hydrate_has_many($alias, $relation, $objects) 
 	{
-		require_once APPPATH."models/{$relation['model']}.php";
 		$ci = get_instance();
+		$ci->load->model($relation['model']);
 		$with_ids = array();
 		$with_key = isset($relation['with_key']) ? $relation['with_key'] : 'id';
 		foreach ($objects as $object)
