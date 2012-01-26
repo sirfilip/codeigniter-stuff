@@ -75,7 +75,7 @@ class Hydrator {
 
 		foreach ($objects as $object)
 		{
-			$object->{$alias} = $data[$object->{$relation['with_key']}];
+			$object->{$alias} = isset($data[$object->{$relation['with_key']}]) ? $data[$object->{$relation['with_key']}] : NULL;;
 		}
 
 		return $objects;
