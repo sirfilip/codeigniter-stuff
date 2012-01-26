@@ -29,6 +29,12 @@ class Hydrator {
 				$has_and_belongs_to_many = $sample->has_and_belongs_to_many();
 				$objects = $this->hydrate_has_and_belongs_to_many($related,$has_and_belongs_to_many[$related], $objects);
 			}
+
+			if (array_key_exists($related, $sample->has_one()))
+			{
+				$has_and_belongs_to_many = $sample->has_one();
+				$objects = $this->hydrate_has_one($related,$has_and_belongs_to_many[$related], $objects);
+			}
 		}
 
 		return $objects;
@@ -115,6 +121,89 @@ class Hydrator {
 		return $objects;
 	}
 
-	function has_and_belongs_to_many($alias, $relation, $objects) {}
+	function has_and_belongs_to_many($alias, $relation, $objects) 
+	{
+		$ci = get_instance();
+		$ci->load->model($relation['model']);
+		$with_ids = array();
+		foreach ($objects as $object)
+		{
+			$with_ids[] = $object->pk();
+		}
+
+		$with_key = $relation['with_key'];
+		$related_key = $relation['related_key'];
+		$join_table = $relation['through'];
+		$related_table = $relation['related_table'];
+
+		$query = $ci->db->from($related_table)
+					->join("{$join_table}", "{$join_table}.{$related_key} = {$related_table}.id")
+					->where_in("{$join_table}.{$with_key}")->get();
+		if ($query->num_rows() > 0)
+		{
+			$class_name = ucfirst($relation['model']);
+			$results = $query->result($class_name);
+		}
+		else
+		{
+			$results = array();
+		}
+
+		$data = array();
+
+		foreach ($results as $row)
+		{
+			$data[$row->{$with_key}] = isset($data[$row->{$with_key}]) ? $data[$row->{$with_key}] : array();
+			$data[$row->{$with_key}][] = $row;
+		}
+
+		foreach ($objects as $object)
+		{
+			$object->{$alias} = $data[$object->pk()];
+		}
+
+		return $objects;
+	}
+
+	function hydrate_has_one($alias, $relation, $objects)
+	{
+		$ci = get_instance();
+		$ci->load->model($relation['model']);
+
+		$object_ids = array();
+
+		foreach ($objects as $object)
+		{
+			$object_ids[] = $object->pk();
+		}
+
+		$related_table = $relation['related_table'];
+		$related_key = $relation['related_key'];
+		$query = $ci->db->where_in($related_key, $object_ids)->get($related_table);
+
+		if ($query->num_rows() > 0)
+		{
+			$class_name = ucfirst($relation['model']);
+			$results = $query->result($class_name);
+		}
+		else 
+		{
+			$results = array();
+		}
+
+		$data = array();
+		foreach ($results as $row)
+		{
+			$data[$row->{$related_key}] = isset($data[$row->{$related_key}]) ? $data[$row->{$related_key}] : array();
+			$data[$row->{$related_key}] = $row; 
+		}
+
+		foreach ($objects as $object)
+		{
+			$object->{$alias} = $data[$object->pk()];
+		}
+		
+		return $objects;
+	}
 
 }

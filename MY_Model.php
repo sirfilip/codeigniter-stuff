@@ -12,6 +12,7 @@ class MY_Model extends CI_Model {
 	protected $_belongs_to = array(); 
 	protected $_has_many = array();
 	protected $_has_and_belongs_to_many = array();
+	protected $_has_one = array();
 
 	protected $_with = array();
 
@@ -22,7 +23,7 @@ class MY_Model extends CI_Model {
 
 	function pk()
 	{
-		return $this->_primary_key;
+		return $this->{$this->_primary_key};
 	}
 
 	function belongs_to()
@@ -39,6 +40,11 @@ class MY_Model extends CI_Model {
 	function has_and_belongs_to_many()
 	{
 		return $this->_has_and_belongs_to_many;
+	}
+
+	function has_one()
+	{
+		return $this->_has_one;
 	}
 
 	function all()
