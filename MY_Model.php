@@ -6,67 +6,121 @@ class MY_Model extends CI_Model {
 	protected $_table = NULL;
 	
 	protected $_primary_key = 'id';
-	
-	function all($offset, $limit)
+
+	protected $_per_page = 10;
+
+	protected $_belongs_to = array(); 
+	protected $_has_many = array();
+	protected $_has_and_belongs_to_many = array();
+
+	protected $_with = array();
+
+	function table()
 	{
-		$query = $this->db->limit($limit)->offset($offset)->get($this->_table);
+		return $this->_table;
+	}
+
+	function pk()
+	{
+		return $this->_primary_key;
+	}
+
+	function belongs_to()
+	{
+		return $this->_belongs_to;
+	}
+
+
+	function has_many()
+	{
+		return $this->_has_many;
+	}
+
+	function has_and_belongs_to_many()
+	{
+		return $this->_has_and_belongs_to_many;
+	}
+
+	function all()
+	{
+		$query = $this->db->get($this->_table);
 		if ($query->num_rows() > 0)
 		{
-			return $query->result(get_class($this));
+			return $this->hydrate($query->result(get_class($this)));
 		}
-		else
+		else 
 		{
 			return array();
 		}
 	}
-	
-	function find_all($where, $limit = FALSE, $offset = FALSE)
+
+	function get()
 	{
-		if ($limit) $this->db->limit($limit);
-		if ($offset) $this->db->offset($offset);
-		
-		$query = $this->db->where($where)->get($this->_table);
-		
+		$query = $this->db->limit(1)->get($this->_table);
 		if ($query->num_rows() > 0)
 		{
-			return $query->result(get_class($this));
-		}
-		else
-		{
-			return array();
-		}
-	}
-	
-	function find($where)
-	{
-		$query = $this->db->where($where)->limit(1)->get($this->_table);
-		if ($query->num_rows() > 0)
-		{
-			return $query->row(0, get_class($this));
-		}
-		else
+			return $this->hydrate($query->result(get_class($this)), TRUE);
+		}	
+		else 
 		{
 			return NULL;
 		}
 	}
+
+	function with($related)
+	{
+		if (! is_array($related))
+		{
+			$related = explode(',', $related);
+		}
+		
+		$this->_with = $related;
+		return $this;
+	}
+
+	function join($with, $on)
+	{
+		$this->db->join($with, $on);
+		return $this;
+	}
+
+	protected function hydrate($results, $get_one = FALSE)
+	{
+		$this->load->library('hydrator');
+		$objects = $this->hydrator->hydrate($results, $this->_with);
+		$this->_with = array();
+		return $get_one ? $objects[0] : $objects; 
+	}
+	
+	function find($where)
+	{
+		$this->db->where($where);
+		return $this;
+	}
+
+	function paginate($offset, $limit = FALSE)
+	{
+		$limit = $limit ? $limit : $this->_per_page;
+		$this->db->limit($limit)->offset($offset);
+		return $this;	
+	}
 	
 	function get_object_or_404($where)
 	{
-		$object = $this->find($where);
-		
-		if ( ! $object)
-		{
-			show_404();
-		}
-		else
+		$object = $this->find($where)->get();
+		if ($object)
 		{
 			return $object;
+		}
+		else 
+		{
+			show_404();
 		}
 	}
 	
 	function find_by_id($id)
 	{
-		return $this->find(array($this->_primary_key => $id));
+		return $this->find(array($this->_primary_key => $id))->get();
 	}
 	
 	function create($props)
@@ -87,7 +141,7 @@ class MY_Model extends CI_Model {
 				 ->delete($this->_table);
 	}
 	
-	function count()
+	function count_all()
 	{
 		return $this->db->count_all($this->_table);
 	}
