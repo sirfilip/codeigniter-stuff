@@ -43,6 +43,9 @@ class Hydrator {
 		{
 			$related_ids[] = $object->{$relation['with_key']};
 		}
+
+		$related_ids = array_unique($related_ids);
+
 		$related_key = isset($relation['related_key']) ? $relation['related_key'] : 'id';
 		$query = $ci->db
 					->where_in($related_key, $related_ids)
@@ -112,6 +115,6 @@ class Hydrator {
 		return $objects;
 	}
 
-	function has_and_belongs_to_many($relation, $objects) {}
+	function has_and_belongs_to_many($alias, $relation, $objects) {}
 
 }
