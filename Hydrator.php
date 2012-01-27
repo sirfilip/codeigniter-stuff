@@ -159,7 +159,7 @@ class Hydrator {
 
 		foreach ($objects as $object)
 		{
-			$object->{$alias} = $data[$object->pk()];
+			$object->{$alias} = isset($data[$object->pk()]) ? $data[$object->pk()] : array();
 		}
 
 		return $objects;
