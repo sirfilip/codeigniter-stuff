@@ -98,7 +98,7 @@ class MY_Model extends CI_Model {
 		return $get_one ? $objects[0] : $objects; 
 	}
 	
-	function find($where)
+	function where($where)
 	{
 		$this->db->where($where);
 		return $this;
@@ -113,7 +113,7 @@ class MY_Model extends CI_Model {
 	
 	function get_object_or_404($where)
 	{
-		$object = $this->find($where)->get();
+		$object = $this->where($where)->get();
 		if ($object)
 		{
 			return $object;
@@ -126,7 +126,7 @@ class MY_Model extends CI_Model {
 	
 	function find_by_id($id)
 	{
-		return $this->find(array($this->_primary_key => $id))->get();
+		return $this->where(array($this->_primary_key => $id))->get();
 	}
 	
 	function create($props)
