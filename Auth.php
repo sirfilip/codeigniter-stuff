@@ -2,7 +2,7 @@
 
 class Auth {
 
-	static $_current_user;
+	protected $_current_user = NULL;
 	
 	function __construct($config = array())
 	{
@@ -17,7 +17,7 @@ class Auth {
 		if ($user and $user->has_password($password))
 		{
 			get_instance()->session->set_userdata('user_id', $user->pk());
-			self::$_current_user = $user;
+			$this->_current_user = $user;
 			if ($remember_me) $this->remember_user();
 			return TRUE;
 		}
@@ -31,12 +31,12 @@ class Auth {
 	{
 		if (! $this->is_authenticated()) return NULL;
 		
-		if (empty(self::$_current_user))
+		if (empty($this->_current_user))
 		{
-			self::$_current_user = get_instance()->user_model->find_by_id(get_instance()->session->userdata('user_id', 0))->get();
+			$this->_current_user = get_instance()->user_model->find_by_id(get_instance()->session->userdata('user_id', 0))->get();
 		}
 		
-		return self::$_current_user;
+		return $this->_current_user;
 	}
 
 	function user_id()
@@ -72,7 +72,7 @@ class Auth {
 			return FALSE;
 		}
 
-		self::$_current_user = $user;
+		$this->_current_user = $user;
 		get_instance()->session->set_userdata('user_id', $user->id);
 		return TRUE;
 	}
@@ -94,7 +94,7 @@ class Auth {
 	function logout()
 	{
 		$this->forget_user();
-		self::$_current_user = NULL;
+		$this->_current_user = NULL;
 		get_instance()->session->unset_userdata('user_id');
 	}
 	
