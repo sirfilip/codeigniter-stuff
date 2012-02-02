@@ -75,7 +75,7 @@ class Hydrator {
 
 		foreach ($objects as $object)
 		{
-			$object->{$alias} = $data[$object->{$relation['with_key']}];
+			$object->{$alias} = isset($data[$object->{$relation['with_key']}]) ? $data[$object->{$relation['with_key']}] : NULL;;
 		}
 
 		return $objects;
@@ -121,7 +121,7 @@ class Hydrator {
 		return $objects;
 	}
 
-	function has_and_belongs_to_many($alias, $relation, $objects) 
+	function hydrate_has_and_belongs_to_many($alias, $relation, $objects) 
 	{
 		$ci = get_instance();
 		$ci->load->model($relation['model']);
@@ -136,9 +136,9 @@ class Hydrator {
 		$join_table = $relation['through'];
 		$related_table = $relation['related_table'];
 
-		$query = $ci->db->from($related_table)
+		$query = $ci->db
 					->join("{$join_table}", "{$join_table}.{$related_key} = {$related_table}.id")
-					->where_in("{$join_table}.{$with_key}")->get();
+					->where_in("{$join_table}.{$with_key}", $with_ids)->get($related_table);
 		if ($query->num_rows() > 0)
 		{
 			$class_name = ucfirst($relation['model']);
@@ -159,7 +159,7 @@ class Hydrator {
 
 		foreach ($objects as $object)
 		{
-			$object->{$alias} = $data[$object->pk()];
+			$object->{$alias} = isset($data[$object->pk()]) ? $data[$object->pk()] : array();
 		}
 
 		return $objects;

@@ -126,7 +126,7 @@ class MY_Model extends CI_Model {
 	
 	function find_by_id($id)
 	{
-		return $this->find(array($this->_primary_key => $id))->get();
+		return $this->find(array($this->_primary_key => $id));
 	}
 	
 	function create($props)
