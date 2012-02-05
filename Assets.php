@@ -32,11 +32,12 @@ class Assets {
         return $this;
     }
     
-    function js($filename)
+    function js($filename, $group = 'default')
     {
+        $this->scripts[$group] = isset($this->scripts[$group]) ? $this->scripts[$group] : array();
         $file_path = $this->config['assets_path'].$this->config['scripts_folder'].$filename; 
         $file_url  = base_url($this->config['assets_url'].$this->config['scripts_folder'].$filename).'?'.filemtime($file_path);
-        $this->scripts[] = '<script type="text/javascript" src="'.$file_url.'"></script>';
+        $this->scripts[$group][] = '<script type="text/javascript" src="'.$file_url.'"></script>';
         return $this;
     }
     
@@ -45,9 +46,9 @@ class Assets {
        return implode("\n", $this->styles);
     }
     
-    function render_scripts()
+    function render_scripts($group = 'default')
     {
-        return implode("\n", $this->scripts);
+        return implode("\n", $this->scripts[$group]);
     }
     
     private function attrs_to_html($attrs) 
