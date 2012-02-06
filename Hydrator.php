@@ -43,7 +43,8 @@ class Hydrator {
 	function hydrate_belongs_to($alias, $relation, $objects) 
 	{
 		$ci = get_instance();
-		$ci->load->model($relation['model']);
+		$module = isset($relation['module']) ? $relation['module'] . '/' : ''; 
+		$ci->load->model($module.$relation['model']);
 		$related_ids = array();
 		foreach ($objects as $object)
 		{
@@ -84,7 +85,8 @@ class Hydrator {
 	function hydrate_has_many($alias, $relation, $objects) 
 	{
 		$ci = get_instance();
-		$ci->load->model($relation['model']);
+		$module = isset($relation['module']) ? $relation['module'] . '/' : ''; 
+		$ci->load->model($module.$relation['model']);
 		$with_ids = array();
 		$with_key = isset($relation['with_key']) ? $relation['with_key'] : 'id';
 		foreach ($objects as $object)
@@ -124,7 +126,8 @@ class Hydrator {
 	function hydrate_has_and_belongs_to_many($alias, $relation, $objects) 
 	{
 		$ci = get_instance();
-		$ci->load->model($relation['model']);
+		$module = isset($relation['module']) ? $relation['module'] . '/' : ''; 
+		$ci->load->model($module.$relation['model']);
 		$with_ids = array();
 		foreach ($objects as $object)
 		{
@@ -168,7 +171,8 @@ class Hydrator {
 	function hydrate_has_one($alias, $relation, $objects)
 	{
 		$ci = get_instance();
-		$ci->load->model($relation['model']);
+		$module = isset($relation['module']) ? $relation['module'] . '/' : ''; 
+		$ci->load->model($module.$relation['model']);
 
 		$object_ids = array();
 
