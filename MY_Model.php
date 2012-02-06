@@ -126,7 +126,7 @@ class MY_Model extends CI_Model {
 	
 	function find_by_id($id)
 	{
-		return $this->find(array($this->_primary_key => $id));
+		return $this->find(array($this->_primary_key => $id))->get();
 	}
 	
 	function create($props)
@@ -150,6 +150,14 @@ class MY_Model extends CI_Model {
 	function count_all()
 	{
 		return $this->db->count_all($this->_table);
+	}
+	
+	function count($where)
+	{
+		return $this->db
+					->from($this->table())
+					->where($where)
+					->count_all_results();
 	}
 
 
