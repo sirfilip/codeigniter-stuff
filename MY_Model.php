@@ -98,6 +98,12 @@ class MY_Model extends CI_Model {
 		return $this;
 	}
 	
+	function or_where($where)
+	{
+		$this->db->or_where($where);
+		return $this;
+	}
+	
 	function select($select)
 	{
 		$this->db->select($select);
@@ -159,12 +165,16 @@ class MY_Model extends CI_Model {
 	
 	function create($props)
 	{
+		if (empty($props)) return FALSE;
+		
 		$this->db->insert($this->_table, $props);
 		return $this->db->insert_id();
 	}
 	
-	function update($id, $props)
+	function update($id, $props = array())
 	{
+		if (empty($props)) return FALSE;
+		
 		$this->db->where($this->_primary_key, $id)
 				 ->update($this->_table, $props);
 	}
@@ -254,8 +264,12 @@ class MY_Model extends CI_Model {
 	
 	function is_valid($extra_rules = array())
 	{
+		$rules = $this->rules();
+		
+		if (empty($rules) and empty($extra_rules)) return TRUE;
+		
 		$this->load->library('form_validation');
-		$this->form_validation->set_rules($this->rules());
+		$this->form_validation->set_rules($rules);
 		if ($extra_rules) $this->form_validation->set_rules($extra_rules);
 		
 		$_POST = $this->updated_fields();
