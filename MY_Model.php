@@ -21,6 +21,8 @@ class MY_Model extends CI_Model {
 	protected $_updated_fields = array();
 	
 	protected $_attr_accessible = array();
+	
+	protected $_errors = array();
 
 	function table()
 	{
@@ -221,10 +223,7 @@ class MY_Model extends CI_Model {
 		
 		foreach ($properties as $property => $value)
 		{
-			if ((! isset($this->{$property})) or (isset($this->{$property}) and $this->{$property} !== $value))
-			{
-				$this->_updated_fields[$property] = $value;
-			}
+			$this->set($property, $value);
 		}
 	}
 	
@@ -243,6 +242,34 @@ class MY_Model extends CI_Model {
 		}
 		
 		return $data;
+	}
+	
+	function set($field, $value)
+	{
+		if ((! isset($this->{$field})) or (isset($this->{$field}) and $this->{$field} !== $value))
+		{
+			$this->_updated_fields[$field] = $value;
+		}
+	}
+	
+	function is_valid($extra_rules = array())
+	{
+		$this->load->library('form_validation');
+		$this->form_validation->set_rules($this->rules());
+		if ($extra_rules) $this->form_validation->set_rules($extra_rules);
+		
+		$_POST = $this->updated_fields();
+		
+		if ($this->form_validation->run())
+		{
+			$this->_errors = array();
+			return TRUE;
+		}
+		else
+		{
+			$this->_errors = $this->form_validation->errors();
+			return FALSE;
+		}
 	}
 
 }
