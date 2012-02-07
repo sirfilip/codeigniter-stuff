@@ -17,6 +17,10 @@ class MY_Model extends CI_Model {
 	protected $_with = array();
 	
 	protected $_rules = array();
+	
+	protected $_updated_fields = array();
+	
+	protected $_attr_accessible = array();
 
 	function table()
 	{
@@ -199,25 +203,46 @@ class MY_Model extends CI_Model {
 		if ($this->is_new_record()) return $this->_rules;
 		
 		$rules = array();
-		$updated_fields = array();
-		
-		foreach ($properties as $property => $value)
-		{
-			if (isset($this->{$property}) and $this->{$property} !== $value)
-			{
-				$updated_fields[] = $property;
-			}
-		}
 		
 		foreach ($this->_rules as $rule)
 		{
-			if (in_array($rule['field'], $updated_fields))
+			if (in_array($rule['field'], array_keys($this->_updated_fields)))
 			{
 				$rules[] = $rule;
 			}
 		}
 		
 		return $rules;
+	}
+	
+	function update_fields($properties = array())
+	{
+		$properties = $this->mass_protect($properties);
+		
+		foreach ($properties as $property => $value)
+		{
+			if ((! isset($this->{$property})) or (isset($this->{$property}) and $this->{$property} !== $value))
+			{
+				$this->_updated_fields[$property] = $value;
+			}
+		}
+	}
+	
+	function updated_fields()
+	{
+		return $this->_updated_fields;
+	}
+	
+	function mass_protect($properties)
+	{
+		$data = array();
+		
+		foreach ($properties as $prop => $val)
+		{
+			if (in_array($prop, $this->_attr_accessible)) $data[$prop] = $val;
+		}
+		
+		return $data;
 	}
 
 }
