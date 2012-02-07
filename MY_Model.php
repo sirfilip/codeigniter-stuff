@@ -15,6 +15,8 @@ class MY_Model extends CI_Model {
 	protected $_has_one = array();
 
 	protected $_with = array();
+	
+	protected $_rules = array();
 
 	function table()
 	{
@@ -187,5 +189,35 @@ class MY_Model extends CI_Model {
 		if ($this->{$alias}) return $this->{$alias};
 	}
 
+	function is_new_record()
+	{
+		return ! isset($this->{$this->_primary_key});
+	}
+	
+	function rules($properties = array())
+	{
+		if ($this->is_new_record()) return $this->_rules;
+		
+		$rules = array();
+		$updated_fields = array();
+		
+		foreach ($properties as $property => $value)
+		{
+			if (isset($this->{$property}) and $this->{$property} !== $value)
+			{
+				$updated_fields[] = $property;
+			}
+		}
+		
+		foreach ($this->_rules as $rule)
+		{
+			if (in_array($rule['field'], $updated_fields))
+			{
+				$rules[] = $rule;
+			}
+		}
+		
+		return $rules;
+	}
 
 }
