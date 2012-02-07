@@ -179,6 +179,13 @@ class MY_Model extends CI_Model {
 					->where($where)
 					->count_all_results();
 	}
+	
+	function __call($method, $params = array())
+	{
+		$alias = "_{$method}";
+		
+		if ($this->{$alias}) return $this->{$alias};
+	}
 
 
 }

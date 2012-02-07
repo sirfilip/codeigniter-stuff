@@ -42,6 +42,8 @@ class Hydrator {
 
 	function hydrate_belongs_to($alias, $relation, $objects) 
 	{
+		$alias = "_{$alias}";
+		
 		$ci = get_instance();
 		$module = isset($relation['module']) ? $relation['module'] . '/' : ''; 
 		$ci->load->model($module.$relation['model']);
@@ -84,6 +86,8 @@ class Hydrator {
 
 	function hydrate_has_many($alias, $relation, $objects) 
 	{
+		$alias = "_{$alias}";
+		
 		$ci = get_instance();
 		$module = isset($relation['module']) ? $relation['module'] . '/' : ''; 
 		$ci->load->model($module.$relation['model']);
@@ -125,6 +129,8 @@ class Hydrator {
 
 	function hydrate_has_and_belongs_to_many($alias, $relation, $objects) 
 	{
+		$alias = "_{$alias}";
+		
 		$ci = get_instance();
 		$module = isset($relation['module']) ? $relation['module'] . '/' : ''; 
 		$ci->load->model($module.$relation['model']);
@@ -170,6 +176,8 @@ class Hydrator {
 
 	function hydrate_has_one($alias, $relation, $objects)
 	{
+		$alias = "_{$alias}";
+		
 		$ci = get_instance();
 		$module = isset($relation['module']) ? $relation['module'] . '/' : ''; 
 		$ci->load->model($module.$relation['model']);
