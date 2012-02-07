@@ -89,6 +89,26 @@ class MY_Model extends CI_Model {
 		$this->db->join($with, $on);
 		return $this;
 	}
+	
+	function select($select)
+	{
+		$this->db->select($select);
+		return $this;
+	}
+	
+	function as_list($property)
+	{
+		$data = array();
+		
+		$objects = $this->all();
+		
+		foreach ($objects as $object)
+		{
+			$data[$object->pk()] = $object->{$property};
+		}
+		
+		return $data;
+	}
 
 	protected function hydrate($results, $get_one = FALSE)
 	{
