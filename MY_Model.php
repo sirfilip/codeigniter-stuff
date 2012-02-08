@@ -179,16 +179,21 @@ class MY_Model extends CI_Model {
 		return $this->db->insert_id();
 	}
 	
-	function update($id, $props = array())
+	function update($id = NULL, $props = array())
 	{
+		$props = array_merge($this->updated_fields(), $props);
 		if (empty($props)) return FALSE;
+		
+		$id = is_null($id) ? $this->pk() : $id;
 		
 		$this->db->where($this->_primary_key, $id)
 				 ->update($this->_table, $props);
 	}
 	
-	function delete($id)
+	function delete($id = NULL)
 	{
+		$id = is_null($id) ? $this->pk() : $id;
+		
 		$this->db->where($this->_primary_key, $id)
 				 ->delete($this->_table);
 	}
