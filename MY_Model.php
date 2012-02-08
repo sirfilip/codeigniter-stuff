@@ -112,6 +112,11 @@ class MY_Model extends CI_Model {
 		$this->db->limit($limit)->offset($offset);
 		return $this;	
 	}
+
+    function find($where)
+    {
+        return $this->where($where);
+    }
 	
 	function get_object_or_404($where)
 	{
