@@ -16,14 +16,6 @@ class MY_Model extends CI_Model {
 
 	protected $_with = array();
 	
-	protected $_rules = array();
-	
-	protected $_updated_fields = array();
-	
-	protected $_attr_accessible = array();
-	
-	protected $_errors = array();
-
 	function table()
 	{
 		return $this->_table;
@@ -92,30 +84,6 @@ class MY_Model extends CI_Model {
 		return $this;
 	}
 
-	function join($with, $on)
-	{
-		$this->db->join($with, $on);
-		return $this;
-	}
-	
-	function or_where($where)
-	{
-		$this->db->or_where($where);
-		return $this;
-	}
-	
-	function where($where)
-	{
-		$this->find($where);
-		return $this;
-	}
-	
-	function select($select)
-	{
-		$this->db->select($select);
-		return $this;
-	}
-	
 	function as_list($property)
 	{
 		$data = array();
@@ -138,12 +106,6 @@ class MY_Model extends CI_Model {
 		return $get_one ? $objects[0] : $objects; 
 	}
 	
-	function find($where)
-	{
-		$this->db->where($where);
-		return $this;
-	}
-
 	function paginate($offset, $limit = FALSE)
 	{
 		$limit = $limit ? $limit : $this->_per_page;
@@ -171,29 +133,18 @@ class MY_Model extends CI_Model {
 	
 	function create($props = array())
 	{	
-		$props = array_merge($this->updated_fields(), $props);
-		
-		if (empty($props)) return FALSE;
-		
 		$this->db->insert($this->_table, $props);
 		return $this->db->insert_id();
 	}
 	
-	function update($id = NULL, $props = array())
+	function update($id, $props)
 	{
-		$props = array_merge($this->updated_fields(), $props);
-		if (empty($props)) return FALSE;
-		
-		$id = is_null($id) ? $this->pk() : $id;
-		
 		$this->db->where($this->_primary_key, $id)
 				 ->update($this->_table, $props);
 	}
 	
-	function delete($id = NULL)
+	function delete($id)
 	{
-		$id = is_null($id) ? $this->pk() : $id;
-		
 		$this->db->where($this->_primary_key, $id)
 				 ->delete($this->_table);
 	}
@@ -213,94 +164,17 @@ class MY_Model extends CI_Model {
 	
 	function __call($method, $params = array())
 	{
-		$alias = "_{$method}";
-		
-		if ($this->{$alias}) return $this->{$alias};
+        if (method_exists($this->db, $method))
+        {
+            call_user_func_array(array($this->db, $method), $params);
+        }
+
+        return $this;
 	}
 
 	function is_new_record()
 	{
 		return ! isset($this->{$this->_primary_key});
-	}
-	
-	function rules($properties = array())
-	{
-		if ($this->is_new_record()) return $this->_rules;
-		
-		$rules = array();
-		
-		foreach ($this->_rules as $rule)
-		{
-			if (in_array($rule['field'], array_keys($this->_updated_fields)))
-			{
-				$rules[] = $rule;
-			}
-		}
-		
-		return $rules;
-	}
-	
-	function update_fields($properties = array())
-	{
-		$properties = $this->mass_protect($properties);
-		
-		foreach ($properties as $property => $value)
-		{
-			$this->set($property, $value);
-		}
-	}
-	
-	function updated_fields()
-	{
-		return $this->_updated_fields;
-	}
-	
-	function mass_protect($properties)
-	{
-		$data = array();
-		
-		foreach ($properties as $prop => $val)
-		{
-			if (in_array($prop, $this->_attr_accessible)) $data[$prop] = $val;
-		}
-		
-		return $data;
-	}
-	
-	function set($field, $value)
-	{
-		if ((! isset($this->{$field})) or (isset($this->{$field}) and $this->{$field} !== $value))
-		{
-			$this->_updated_fields[$field] = $value;
-		}
-	}
-	
-	function is_valid($extra_rules = array())
-	{
-		$rules = array_merge($this->rules(), $extra_rules);
-		
-		if (empty($rules)) return TRUE;
-		
-		$this->load->library('form_validation');
-		if ($rules) $this->form_validation->set_rules($rules);
-		
-		$_POST = array_merge($_POST, $this->updated_fields());
-		
-		if ($this->form_validation->run())
-		{
-			$this->_errors = array();
-			return TRUE;
-		}
-		else
-		{
-			$this->_errors = $this->form_validation->errors();
-			return FALSE;
-		}
-	}
-	
-	function errors()
-	{
-		return $this->_errors;
 	}
 
 }

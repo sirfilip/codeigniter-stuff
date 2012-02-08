@@ -1,194 +1,299 @@
-<?php  if (! defined('BASEPATH')) exit('No direct script access allowed');
+<?php  if (!defined('BASEPATH')) exit('No direct script access allowed');
 
 
-class Base_model {
+class MY_Model extends CI_Model {
 	
-	// db connection to be used
-	protected $_db_connection_name = 'default';
+	protected $_table = NULL;
 	
-	// data holding all of the object properties 
-	protected $_data = array();
-	// updated fields
-	protected $_updated_fields = array();
-	// errors 
-	protected $_errors = array();
-	
-	// primary key
 	protected $_primary_key = 'id';
-	// table name 
-	protected $_table = '';
+
+	protected $_per_page = 10;
+
+	protected $_belongs_to = array(); 
+	protected $_has_many = array();
+	protected $_has_and_belongs_to_many = array();
+	protected $_has_one = array();
+
+	protected $_with = array();
 	
-	// codeigniter instance
-	protected $CI = NULL;
-	
-	// prevents mass assignment atack
-	protected $_attr_accessible = array();
-	
-	// validation rules 
 	protected $_rules = array();
 	
+	protected $_updated_fields = array();
 	
-	function __construct()
+	protected $_attr_accessible = array();
+	
+	protected $_errors = array();
+
+	function table()
 	{
-		$this->CI = get_instance();
+		return $this->_table;
 	}
-	
-	function __destruct()
+
+	function pk()
 	{
-		$this->CI = NULL;
+		return $this->{$this->_primary_key};
 	}
-	
-	function __get($name) 
+
+	function belongs_to()
 	{
-		return array_key_exists($name, $this->_data) ? $this->_data[$name] : NULL;
+		return $this->_belongs_to;
 	}
-	
-	function __set($name, $value) 
+
+
+	function has_many()
 	{
-		if (array_key_exists($name, $this->_data) and $this->_data[$name] !== $value)
+		return $this->_has_many;
+	}
+
+	function has_and_belongs_to_many()
+	{
+		return $this->_has_and_belongs_to_many;
+	}
+
+	function has_one()
+	{
+		return $this->_has_one;
+	}
+
+	function all()
+	{
+		$query = $this->db->get($this->_table);
+		if ($query->num_rows() > 0)
 		{
-			$this->_updated_fields[$name] = $value;
+			return $this->hydrate($query->result(get_class($this)));
 		}
-		$this->_data[$name] = $value;
+		else 
+		{
+			return array();
+		}
 	}
-	
-	function __isset($name)
+
+	function get()
 	{
-		return array_key_exists($name, $this->_data);
+		$query = $this->db->limit(1)->get($this->_table);
+		if ($query->num_rows() > 0)
+		{
+			return $this->hydrate($query->result(get_class($this)), TRUE);
+		}	
+		else 
+		{
+			return NULL;
+		}
 	}
-	
-	function __unset($name)
+
+	function with($related)
 	{
-		unset($this->_data[$name]);
+		if (! is_array($related))
+		{
+			$related = explode(',', $related);
+		}
+		
+		$this->_with = $related;
+		return $this;
 	}
-	
-	function as_array()
+
+	function join($with, $on)
 	{
-		return $this->_data;
-	}
-	
-	function as_json()
-	{
-		return json_encode($this->_data);
-	}
-	
-	function use_connection($connection_name)
-	{
-		$this->_db_connection_name = $connection_name;
+		$this->db->join($with, $on);
 		return $this;
 	}
 	
-	function db()
+	function or_where($where)
 	{
-		return $this->CI->load->database($this->_db_connection_name, TRUE);
+		$this->db->or_where($where);
+		return $this;
 	}
 	
+	function where($where)
+	{
+		$this->find($where);
+		return $this;
+	}
+	
+	function select($select)
+	{
+		$this->db->select($select);
+		return $this;
+	}
+	
+	function as_list($property)
+	{
+		$data = array();
+		
+		$objects = $this->all();
+		
+		foreach ($objects as $object)
+		{
+			$data[$object->pk()] = $object->{$property};
+		}
+		
+		return $data;
+	}
+
+	protected function hydrate($results, $get_one = FALSE)
+	{
+		$this->load->library('hydrator');
+		$objects = $this->hydrator->hydrate($results, $this->_with);
+		$this->_with = array();
+		return $get_one ? $objects[0] : $objects; 
+	}
+	
+	function find($where)
+	{
+		$this->db->where($where);
+		return $this;
+	}
+
+	function paginate($offset, $limit = FALSE)
+	{
+		$limit = $limit ? $limit : $this->_per_page;
+		$this->db->limit($limit)->offset($offset);
+		return $this;	
+	}
+	
+	function get_object_or_404($where)
+	{
+		$object = $this->find($where)->get();
+		if ($object)
+		{
+			return $object;
+		}
+		else 
+		{
+			show_404();
+		}
+	}
+	
+	function find_by_id($id)
+	{
+		return $this->find(array($this->_primary_key => $id))->get();
+	}
+	
+	function create($props = array())
+	{	
+		$props = array_merge($this->updated_fields(), $props);
+		
+		if (empty($props)) return FALSE;
+		
+		$this->db->insert($this->_table, $props);
+		return $this->db->insert_id();
+	}
+	
+	function update($id = NULL, $props = array())
+	{
+		$props = array_merge($this->updated_fields(), $props);
+		if (empty($props)) return FALSE;
+		
+		$id = is_null($id) ? $this->pk() : $id;
+		
+		$this->db->where($this->_primary_key, $id)
+				 ->update($this->_table, $props);
+	}
+	
+	function delete($id = NULL)
+	{
+		$id = is_null($id) ? $this->pk() : $id;
+		
+		$this->db->where($this->_primary_key, $id)
+				 ->delete($this->_table);
+	}
+	
+	function count_all()
+	{
+		return $this->db->count_all($this->_table);
+	}
+	
+	function count($where)
+	{
+		return $this->db
+					->from($this->table())
+					->where($where)
+					->count_all_results();
+	}
+	
+	function __call($method, $params = array())
+	{
+		$alias = "_{$method}";
+		
+		if ($this->{$alias}) return $this->{$alias};
+	}
+
 	function is_new_record()
 	{
-		return ! array_key_exists($this->_primary_key, $this->_data);
+		return ! isset($this->{$this->_primary_key});
 	}
 	
-	function update_attributes($attributes = array())
+	function rules($properties = array())
 	{
-		foreach ($this->_attr_accessible as $key)
+		if ($this->is_new_record()) return $this->_rules;
+		
+		$rules = array();
+		
+		foreach ($this->_rules as $rule)
 		{
-			if (array_key_exists($key, $attributes)) $this->{$key} = $attributes[$key];
-		}
-		return $this;
-	}
-	
-	protected function before_save() 
-	{
-		return TRUE;
-	}
-	
-	protected function after_save() 
-	{
-		return TRUE;
-	}
-	
-	protected function before_create() 
-	{
-		return TRUE;
-	}
-	
-	protected function after_create() 
-	{
-		return TRUE;
-	}
-	
-	protected function before_update() 
-	{
-		return TRUE;
-	}
-	
-	protected function after_update() 
-	{
-		return TRUE;
-	}
-	
-	function save()
-	{
-		if (! $this->before_save()) return FALSE;
-		if ($this->is_new_record())
-		{
-			if (! $this->before_create()) return FALSE;
-			$this->create();
-			if (! $this->after_create()) return FALSE;
-		}
-		else
-		{
-			if (! $this->before_update()) return FALSE;
-			$this->update();
-			if (! $this->after_update()) return FALSE;
-		}
-		if (! $this->after_save()) return FALSE;
-		return ! $this->has_errors();
-	}
-	
-	function has_errors()
-	{
-		return ! empty($this->_errors);
-	}
-	
-	function is_valid()
-	{
-		return $this->validate();
-	}
-	
-	function rules()
-	{
-		if ($this->is_new_record())
-		{
-			return $this->_rules;
-		}
-		else
-		{
-			$rules = array();
-			foreach ($this->_rules as $rule)
+			if (in_array($rule['field'], array_keys($this->_updated_fields)))
 			{
-				if (array_key_exists($rule['field'], $this->_updated_fields))
-				{
-					array_push($rules, $rule);
-				}
+				$rules[] = $rule;
 			}
-			return $rules;
+		}
+		
+		return $rules;
+	}
+	
+	function update_fields($properties = array())
+	{
+		$properties = $this->mass_protect($properties);
+		
+		foreach ($properties as $property => $value)
+		{
+			$this->set($property, $value);
 		}
 	}
 	
-	function validate()
+	function updated_fields()
 	{
-		$_POST = $this->is_new_record() ? $this->_data : $this->_updated_fields;    
-		$this->CI->load->library('form_validation');
-		$this->CI->form_validation->set_rules($this->rules());
-		if ($this->CI->form_validation->run())
+		return $this->_updated_fields;
+	}
+	
+	function mass_protect($properties)
+	{
+		$data = array();
+		
+		foreach ($properties as $prop => $val)
+		{
+			if (in_array($prop, $this->_attr_accessible)) $data[$prop] = $val;
+		}
+		
+		return $data;
+	}
+	
+	function set($field, $value)
+	{
+		if ((! isset($this->{$field})) or (isset($this->{$field}) and $this->{$field} !== $value))
+		{
+			$this->_updated_fields[$field] = $value;
+		}
+	}
+	
+	function is_valid($extra_rules = array())
+	{
+		$rules = array_merge($this->rules(), $extra_rules);
+		
+		if (empty($rules)) return TRUE;
+		
+		$this->load->library('form_validation');
+		if ($rules) $this->form_validation->set_rules($rules);
+		
+		$_POST = array_merge($_POST, $this->updated_fields());
+		
+		if ($this->form_validation->run())
 		{
 			$this->_errors = array();
 			return TRUE;
 		}
 		else
 		{
-			$this->_errors = $this->CI->form_validation->errors();
+			$this->_errors = $this->form_validation->errors();
 			return FALSE;
 		}
 	}
@@ -197,92 +302,5 @@ class Base_model {
 	{
 		return $this->_errors;
 	}
-	
-	protected function create() 
-	{
-		$data = $this->_data;
-		$this->db()->insert($this->_table, $data);
-		$this->{$this->_primary_key} = $this->db()->insert_id();
-	}
-	
-	protected function update() 
-	{
-		$data = $this->_updated_fields;
-		$this->db()->where($this->_primary_key, $this->{$this->_primary_key})->update($this->_table, $data);
-	}
-	
-	function delete()
-	{
-		$this->db()->where($this->_primary_key, $this->{$this->_primary_key})
-				 ->delete($this->_table);
-	}
-	
-	function all($offset, $limit)
-	{
-		$query = $this->db()->limit($limit)->offset($offset)->get($this->_table);
-		if ($query->num_rows() > 0)
-		{
-			return $query->result(get_class($this));
-		}
-		else
-		{
-			return array();
-		}
-	}
-	
-	function find_all($where, $limit = FALSE, $offset = FALSE)
-	{
-		if ($limit) $this->db()->limit($limit);
-		if ($offset) $this->db()->offset($offset);
-		
-		$query = $this->db()->where($where)->get($this->_table);
-		
-		if ($query->num_rows() > 0)
-		{
-			return $query->result(get_class($this));
-		}
-		else
-		{
-			return array();
-		}
-	}
-	
-	function find($where)
-	{
-		$query = $this->db()->where($where)->limit(1)->get($this->_table);
-		if ($query->num_rows() > 0)
-		{
-			return $query->row(0, get_class($this));
-		}
-		else
-		{
-			return NULL;
-		}
-	}
-	
-	function get_object_or_404($where)
-	{
-		$object = $this->find($where);
-		
-		if ( ! $object)
-		{
-			show_404();
-		}
-		else
-		{
-			return $object;
-		}
-	}
-	
-	function find_by_id($id)
-	{
-		return $this->find(array($this->_primary_key => $id));
-	}
-	
-	function count_all()
-	{
-		return $this->db()->count_all($this->_table);
-	}
-	
-	
+
 }
