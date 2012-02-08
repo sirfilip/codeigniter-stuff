@@ -104,6 +104,12 @@ class MY_Model extends CI_Model {
 		return $this;
 	}
 	
+	function where($where)
+	{
+		$this->find($where);
+		return $this;
+	}
+	
 	function select($select)
 	{
 		$this->db->select($select);
@@ -163,8 +169,10 @@ class MY_Model extends CI_Model {
 		return $this->find(array($this->_primary_key => $id))->get();
 	}
 	
-	function create($props)
-	{
+	function create($props = array())
+	{	
+		$props = array_merge($this->updated_fields(), $props);
+		
 		if (empty($props)) return FALSE;
 		
 		$this->db->insert($this->_table, $props);
@@ -264,15 +272,14 @@ class MY_Model extends CI_Model {
 	
 	function is_valid($extra_rules = array())
 	{
-		$rules = $this->rules();
+		$rules = array_merge($this->rules(), $extra_rules);
 		
-		if (empty($rules) and empty($extra_rules)) return TRUE;
+		if (empty($rules)) return TRUE;
 		
 		$this->load->library('form_validation');
-		$this->form_validation->set_rules($rules);
-		if ($extra_rules) $this->form_validation->set_rules($extra_rules);
+		if ($rules) $this->form_validation->set_rules($rules);
 		
-		$_POST = $this->updated_fields();
+		$_POST = array_merge($_POST, $this->updated_fields());
 		
 		if ($this->form_validation->run())
 		{
@@ -284,6 +291,11 @@ class MY_Model extends CI_Model {
 			$this->_errors = $this->form_validation->errors();
 			return FALSE;
 		}
+	}
+	
+	function errors()
+	{
+		return $this->_errors;
 	}
 
 }
