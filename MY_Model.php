@@ -2,7 +2,7 @@
 
 
 class MY_Model extends CI_Model {
-	
+
 	protected $_table = NULL;
 	
 	protected $_primary_key = 'id';
@@ -105,19 +105,19 @@ class MY_Model extends CI_Model {
 		$this->_with = array();
 		return $get_one ? $objects[0] : $objects; 
 	}
-	
+
 	function paginate($offset, $limit = FALSE)
 	{
 		$limit = $limit ? $limit : $this->_per_page;
 		$this->db->limit($limit)->offset($offset);
-		return $this;	
+		return $this;
 	}
 
-    function find($where)
-    {
-        return $this->where($where);
-    }
-	
+	function find($where)
+	{
+		return $this->where($where);
+ 	}
+
 	function get_object_or_404($where)
 	{
 		$object = $this->find($where)->get();
@@ -130,35 +130,35 @@ class MY_Model extends CI_Model {
 			show_404();
 		}
 	}
-	
+
 	function find_by_id($id)
 	{
 		return $this->find(array($this->_primary_key => $id))->get();
 	}
-	
+
 	function create($props = array())
 	{	
 		$this->db->insert($this->_table, $props);
 		return $this->db->insert_id();
 	}
-	
+
 	function update($id, $props)
 	{
 		$this->db->where($this->_primary_key, $id)
-				 ->update($this->_table, $props);
+				->update($this->_table, $props);
 	}
-	
+
 	function delete($id)
 	{
 		$this->db->where($this->_primary_key, $id)
-				 ->delete($this->_table);
+				->delete($this->_table);
 	}
-	
+
 	function count_all()
 	{
 		return $this->db->count_all($this->_table);
 	}
-	
+
 	function count($where)
 	{
 		return $this->db
@@ -166,15 +166,15 @@ class MY_Model extends CI_Model {
 					->where($where)
 					->count_all_results();
 	}
-	
+
 	function __call($method, $params = array())
 	{
-        if (method_exists($this->db, $method))
-        {
-            call_user_func_array(array($this->db, $method), $params);
-        }
-
-        return $this;
+		if (method_exists($this->db, $method))
+		{
+			call_user_func_array(array($this->db, $method), $params);
+		}
+		
+		return $this;
 	}
 
 	function is_new_record()
