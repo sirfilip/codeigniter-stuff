@@ -58,7 +58,7 @@ class MY_Model extends CI_Model {
 	
 	function find_by_id($id)
 	{
-		return $this->where(array('id', $id))->get();
+		return $this->where(array('id' => $id))->get();
 	}
 	
 	function find($where)
