@@ -84,7 +84,7 @@ class MY_Model extends CI_Model {
 	function create($props)
 	{
 		$this->db->insert($this->_table, $props);
-		return $this->db->last_insert_id();
+		return $this->db->insert_id();
 	}
 	
 	function update($id, $props)
