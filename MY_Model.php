@@ -56,6 +56,31 @@ class MY_Model extends CI_Model {
 		return $data;
 	}
 	
+	function find_by_id($id)
+	{
+		return $this->where(array('id', $id))->get();
+	}
+	
+	function find($where)
+	{
+		$this->db->where($where);
+		return $this;
+	}
+	
+	function get_object_or_404()
+	{
+		$object = $this->get();
+		
+		if ($object)
+		{
+			return $object;
+		}
+		else
+		{
+			show_404();
+		}
+	}
+	
 	function create($props)
 	{
 		$this->db->insert($this->_table, $props);
