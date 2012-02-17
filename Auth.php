@@ -8,16 +8,16 @@ class Auth {
 	{
 		$this->config = $config;
 		get_instance()->load->library('session');
-		get_instance()->load->model('users/user_model');
+		get_instance()->load->model('user_model');
 	}
 	
-	function authenticate($username, $password, $remember_me = FALSE)
+	function authenticate($email, $password, $remember_me = FALSE)
 	{
-		$user = get_instance()->user_model->find(array('username' => $username))->get();
-		if ($user and $user->has_password($password))
+		$user = get_instance()->user_model->where(array('email' => $email))->get();
+		
+		if ($user and get_instance()->user_model->has_password($user, $password))
 		{
-			get_instance()->session->set_userdata('user_id', $user->pk());
-			$this->_current_user = $user;
+			$this->authenticate_user($user);
 			if ($remember_me) $this->remember_user();
 			return TRUE;
 		}
@@ -27,13 +27,19 @@ class Auth {
 		}
 	}
 	
+	function authenticate_user($user)
+	{
+		get_instance()->session->set_userdata('user_id', $user->id);
+		$this->_current_user = $user;
+	}
+	
 	function current_user()
 	{
 		if (! $this->is_authenticated()) return NULL;
 		
 		if (empty($this->_current_user))
 		{
-			$this->_current_user = get_instance()->user_model->find_by_id(get_instance()->session->userdata('user_id', 0))->get();
+			$this->_current_user = get_instance()->user_model->find_by_id(get_instance()->session->userdata('user_id', 0));
 		}
 		
 		return $this->_current_user;
