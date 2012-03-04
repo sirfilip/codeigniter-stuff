@@ -6,6 +6,8 @@ class MY_Model extends CI_Model {
 	protected $_table = NULL;
 	
 	protected $_primary_key = 'id';
+	
+	protected $_dto = 'stdClass';
 
 	function __call($method, $params = array())
 	{
@@ -21,7 +23,7 @@ class MY_Model extends CI_Model {
 		$query = $this->db->get($this->_table);
 		if ($query->num_rows() > 0)
 		{
-			return $query->row();
+			return $query->row(0, $this->_dto);
 		}
 		else
 		{
@@ -35,7 +37,7 @@ class MY_Model extends CI_Model {
 		
 		if ($query->num_rows() > 0)
 		{
-			return $query->result();
+			return $query->result($this->_dto);
 		}
 		else
 		{
