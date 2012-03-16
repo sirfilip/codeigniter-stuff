@@ -6,6 +6,8 @@ class MY_Model extends CI_Model {
 	protected $_table = NULL;
 	
 	protected $_primary_key = 'id';
+	
+	protected $_dto = 'stdClass';
 
 	function __call($method, $params = array())
 	{
@@ -16,12 +18,30 @@ class MY_Model extends CI_Model {
 		}
 	}
 	
+	function dto($class = NULL)
+	{
+		if (is_null($class))
+		{
+			return $this->_dto;
+		}
+		else
+		{
+			$this->_dto = $class;
+			return $this;
+		}
+	}
+	
+	function pk()
+	{
+		return $this->_primary_key;
+	}
+	
 	function get()
 	{
 		$query = $this->db->get($this->_table);
 		if ($query->num_rows() > 0)
 		{
-			return $query->row();
+			return $query->row(0, $this->_dto);
 		}
 		else
 		{
@@ -35,7 +55,7 @@ class MY_Model extends CI_Model {
 		
 		if ($query->num_rows() > 0)
 		{
-			return $query->result();
+			return $query->result($this->_dto);
 		}
 		else
 		{
@@ -50,7 +70,7 @@ class MY_Model extends CI_Model {
 		
 		foreach ($objects as $object)
 		{
-			$data[$object->pk()] = $object->{$property};
+			$data[$object->id] = $object->{$property};
 		}
 		
 		return $data;
@@ -67,9 +87,9 @@ class MY_Model extends CI_Model {
 		return $this;
 	}
 	
-	function get_object_or_404()
+	function get_object_or_404($where)
 	{
-		$object = $this->get();
+		$object = $this->where($where)->get();
 		
 		if ($object)
 		{
@@ -89,12 +109,13 @@ class MY_Model extends CI_Model {
 	
 	function update($id, $props)
 	{
-		$this->db->where($this->_primary_key, $id)->update($this->_table, $props);
+		$this->db->where($this->pk(), $id)->update($this->_table, $props);
+		return $this->db->affected_rows();
 	}
 	
 	function delete($id)
 	{
-		$this->db->where($this->_primary_key, $id)->delete($this->_table);
+		$this->db->where($this->pk(), $id)->delete($this->_table);
 	}
 	
 	function paginate($offset, $limit)
