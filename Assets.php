@@ -48,7 +48,7 @@ class Assets {
     
     function render_scripts($group = 'default')
     {
-        return implode("\n", $this->scripts[$group]);
+        return isset($this->scripts[$group]) ? implode("\n", $this->scripts[$group]) : '';
     }
     
     private function attrs_to_html($attrs) 
