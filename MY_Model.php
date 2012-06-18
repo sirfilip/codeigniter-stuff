@@ -8,12 +8,32 @@ class MY_Model extends CI_Model {
 	protected $_primary_key = 'id';
 	
 	protected $_dto = 'stdClass';
+	
+	function __construct()
+	{
+		parent::__construct();
+		$this->load->database();
+		// $this->db->save_queries = FALSE;
+	}
 
 	function __call($method, $params = array())
 	{
 		if (method_exists($this->db, $method))
 		{
 			call_user_func_array(array($this->db, $method), $params);
+			return $this;
+		}
+	}
+	
+	function table($table = NULL)
+	{
+		if (is_null($table))
+		{
+			return $this->_table;
+		}
+		else
+		{
+			$this->_table = $table;
 			return $this;
 		}
 	}
@@ -41,7 +61,7 @@ class MY_Model extends CI_Model {
 		$query = $this->db->get($this->_table);
 		if ($query->num_rows() > 0)
 		{
-			return $query->row(0, $this->_dto);
+			return $query->row(0, $this->dto());
 		}
 		else
 		{
@@ -55,7 +75,7 @@ class MY_Model extends CI_Model {
 		
 		if ($query->num_rows() > 0)
 		{
-			return $query->result($this->_dto);
+			return $query->result($this->dto());
 		}
 		else
 		{
