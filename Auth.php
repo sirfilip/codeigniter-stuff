@@ -12,7 +12,7 @@ class Auth {
 	}
 	
 	/**
-	 * Authenticates a user with $username ana password.
+	 * Authenticates a user with $username and password.
 	 * 
 	 * @param string $username
 	 * @param string $password.
