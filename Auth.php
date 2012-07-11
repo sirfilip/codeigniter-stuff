@@ -11,9 +11,17 @@ class Auth {
 		get_instance()->load->model('user_model');
 	}
 	
-	function authenticate($email, $password, $remember_me = FALSE)
+	/**
+	 * Authenticates a user with $username ana password.
+	 * 
+	 * @param string $username
+	 * @param string $password.
+	 * @param bool $remember_me 
+	 * @return bool
+	 */
+	function authenticate($username, $password, $remember_me = FALSE)
 	{
-		$user = get_instance()->user_model->where(array('email' => $email))->get();
+		$user = get_instance()->user_model->where(array('username' => $username))->get();
 		
 		if ($user and get_instance()->user_model->has_password($user, $password))
 		{
@@ -27,12 +35,22 @@ class Auth {
 		}
 	}
 	
+	/**
+	 * Stores the users info in session.
+	 * 
+	 * @param object $user
+	 */
 	function authenticate_user($user)
 	{
 		get_instance()->session->set_userdata('user_id', $user->id);
 		$this->_current_user = $user;
 	}
 	
+	/**
+	 * Returns current authenticated user or NULL
+	 * 
+	 * @return object or NULL
+	 */
 	function current_user()
 	{
 		if (! $this->is_authenticated()) return NULL;
@@ -44,12 +62,20 @@ class Auth {
 		
 		return $this->_current_user;
 	}
-
+	
+	/**
+	 * Fetches current user id from session.
+	 * 
+	 * @return int
+	 */
 	function user_id()
 	{
 		return get_instance()->session->userdata('user_id', 0);
 	}
 
+	/**
+	 * Remembers the current authenticated user with remember me cookie.
+	 */
 	function remember_user()
 	{
 		$token = get_instance()->user_model->generate_token($this->current_user()->id);
@@ -61,6 +87,13 @@ class Auth {
 		get_instance()->user_model->update($this->current_user()->id, array('remember_me_token' => $token));
 	}
 
+	/**
+	 * Checks if the user is remembered.
+	 * 
+	 * If user is remembered via remember me cookie it will authenticate the user.
+	 * 
+	 * @return bool
+	 */
 	function remember_me_check()
 	{
 		$token = get_instance()->input->cookie($this->config['remember_me_cookie'], TRUE);
@@ -83,6 +116,9 @@ class Auth {
 		return TRUE;
 	}
 
+	/**
+	 * Forgets user via clearing the remember me cookie.
+	 */
 	function forget_user()
 	{
 		get_instance()->user_model->update($this->current_user()->id, array('remember_me_token' => NULL));
@@ -92,11 +128,19 @@ class Auth {
 		));
 	}
 	
+	/**
+	 * Checks if the user is authenticated.
+	 * 
+	 * @return bool
+	 */
 	function is_authenticated()
 	{
 		return (bool) get_instance()->session->userdata('user_id');
 	}
 	
+	/**
+	 * Logs out the current authenticated user.
+	 */
 	function logout()
 	{
 		$this->forget_user();
