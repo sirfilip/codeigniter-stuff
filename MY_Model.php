@@ -29,18 +29,28 @@ class MY_Model extends CI_Model {
     
     function build($properties = array())
     {
-        $data = array();
+        $object = new $this->_dto;
+        return $this->update_values($object, $properties); 
+    }
+    
+    function mass_protect($properties = array())
+    {
+    	$data = array();
         foreach ($this->_attr_accessible as $key)
         {
-            $data[$key] = $properties[$key];
+            if (isset($properties[$key])) $data[$key] = $properties[$key];
         }
-        
-        $object = new $this->dto();
-        foreach ($data as $property => $value)
+        return $data;
+    }
+    
+    function update_values($object, $properties = array())
+    {
+    	$data = $this->mass_protect($properties);
+    	foreach ($data as $property => $value)
         {
             $object->{$property} = $value;
         }
-        return $object;
+        return $object; 
     }
 	
 	function table($table = NULL)
@@ -139,7 +149,7 @@ class MY_Model extends CI_Model {
 		}
 	}
     
-    function save($object)
+    function save(Dto $object)
     {
         if ($object->is_new_record())
         {
@@ -151,14 +161,14 @@ class MY_Model extends CI_Model {
         }
     }
 	
-	function create($object)
+	function create(Dto $object)
 	{
 		$this->db->insert($this->_table, $object->data());
 		$object->id = $this->db->insert_id();
         return $object;
 	}
 	
-	function update($object)
+	function update(Dto $object)
 	{
 		$this->db->where($this->pk(), $object->id)->update($this->_table, $object->data());
 		return $this->db->affected_rows();
