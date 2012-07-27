@@ -89,4 +89,18 @@ class MY_Form_validation extends CI_Form_validation {
 		}
 	}
 	
+	public static function allowed_values($value, $values)
+	{
+		$values = explode(",", $values);
+		if (in_array($value, $values))
+		{
+			return TRUE;
+		}
+		else
+		{
+			get_instance()->form_validation->set_message('allowed_values', "Value {$value} must be one of ".implode(",", $values));
+			return FALSE;
+		}
+	}
+	
 }
