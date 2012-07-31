@@ -1,15 +1,16 @@
 <?php  if (!defined('BASEPATH')) exit('No direct script access allowed');
 
-
+/**
+* Class that acts as DAO (data access object).
+* @author Filip Kostovski <filip.kostovski@cosmicdevelopment.com>
+*/
 class MY_Model extends CI_Model {
 	
 	protected $_table = NULL;
 	
 	protected $_primary_key = 'id';
 	
-	protected $_dto = 'Dto';
-    
-    protected $_attr_accessible = array();
+	protected $_dto = 'stdClass';
 	
 	function __construct()
 	{
@@ -18,6 +19,9 @@ class MY_Model extends CI_Model {
 		// $this->db->save_queries = FALSE;
 	}
 
+	/**
+	* Delegates all method calls to db if exists.
+	*/ 
 	function __call($method, $params = array())
 	{
 		if (method_exists($this->db, $method))
@@ -26,33 +30,10 @@ class MY_Model extends CI_Model {
 			return $this;
 		}
 	}
-    
-    function build($properties = array())
-    {
-        $object = new $this->_dto;
-        return $this->update_values($object, $properties); 
-    }
-    
-    function mass_protect($properties = array())
-    {
-    	$data = array();
-        foreach ($this->_attr_accessible as $key)
-        {
-            if (isset($properties[$key])) $data[$key] = $properties[$key];
-        }
-        return $data;
-    }
-    
-    function update_values($object, $properties = array())
-    {
-    	$data = $this->mass_protect($properties);
-    	foreach ($data as $property => $value)
-        {
-            $object->{$property} = $value;
-        }
-        return $object; 
-    }
 	
+	/**
+	* Acts as getter and setter of the database table.
+	*/
 	function table($table = NULL)
 	{
 		if (is_null($table))
@@ -66,6 +47,12 @@ class MY_Model extends CI_Model {
 		}
 	}
 	
+	/**
+	* Acts as getter and setter of the DTO (data transfer object).
+	*
+	* DTO is the object used in generating query results by default it is std
+	* class object.
+	*/
 	function dto($class = NULL)
 	{
 		if (is_null($class))
@@ -79,11 +66,17 @@ class MY_Model extends CI_Model {
 		}
 	}
 	
+	/**
+	* Returns the primary key of a table
+	*/
 	function pk()
 	{
 		return $this->_primary_key;
 	}
 	
+	/**
+	* Fetches a single record as an instance of the dto setting.
+	*/
 	function get()
 	{
 		$query = $this->db->get($this->_table);
@@ -97,6 +90,9 @@ class MY_Model extends CI_Model {
 		}
 	}
 	
+	/**
+	* Fetches all records loaded from the db.
+	*/
 	function all()
 	{
 		$query = $this->db->get($this->_table);
@@ -111,6 +107,9 @@ class MY_Model extends CI_Model {
 		}
 	}
 	
+	/**
+	* Loads all records an returns an associative array with primary keys as key.
+	*/
 	function as_list($property)
 	{
 		$data = array();
@@ -124,17 +123,26 @@ class MY_Model extends CI_Model {
 		return $data;
 	}
 	
+	/**
+	* Shorthand for finding an object by id.
+	*/
 	function find_by_id($id)
 	{
 		return $this->where(array('id' => $id))->get();
 	}
 	
+	/**
+	* Alias for where.
+	*/
 	function find($where)
 	{
 		$this->db->where($where);
 		return $this;
 	}
 	
+	/**
+	* Fetches an object or raises 404.
+	*/
 	function get_object_or_404($where)
 	{
 		$object = $this->where($where)->get();
@@ -148,89 +156,56 @@ class MY_Model extends CI_Model {
 			show_404();
 		}
 	}
-    
-    function save(Dto $object)
-    {
-        if ($object->is_new_record())
-        {
-            return $this->create($object);
-        }
-        else
-        {
-            return $this->update($object);
-        }
-    }
 	
-	function create(Dto $object)
+	/**
+	* Creates new record in the databse.
+	*/
+	function create($props)
 	{
-		$this->db->insert($this->_table, $object->data());
-		$object->id = $this->db->insert_id();
-        return $object;
+		$this->db->insert($this->_table, $props);
+		return $this->db->insert_id();
 	}
 	
-	function update(Dto $object)
+	/**
+	* Updates existing record in the databse.
+	*/
+	function update($id, $props)
 	{
-		$this->db->where($this->pk(), $object->id)->update($this->_table, $object->data());
+		$this->db->where($this->pk(), $id)->update($this->_table, $props);
 		return $this->db->affected_rows();
 	}
 	
+	/**
+	* Deletes a record based on it's primary key.
+	*/
 	function delete($id)
 	{
 		$this->db->where($this->pk(), $id)->delete($this->_table);
 	}
 	
+	/**
+	* Performs pagination.
+	*/
 	function paginate($offset, $limit)
 	{
 		$this->db->offset($offset)->limit($limit);
 		return $this;
 	}
 	
+	/**
+	* Count all records loaded by the db.
+	*/
 	function count()
 	{
 		return $this->db->count_all_results($this->_table);
 	}
 	
+	/**
+	* Counts all records inside a table.
+	*/
 	function count_all()
 	{
 		return $this->db->count_all($this->_table);
 	}
 
-}
-
-class Dto {
-    
-    public $id;
-    public $_data = array();
-    
-    public function __get($key)
-    {
-        return isset($this->_data[$key]) ? $this->_data[$key] : NULL;
-    }
-    
-    public function __set($key, $val)
-    {
-        $this->_data[$key] = $val;
-    }
-    
-    public function __isset($prop) 
-    {
-        return isset($this->_data[$prop]);
-    }
-    
-    public function data($data = NULL)
-    {
-        if (is_null($data))
-        {
-            return $this->_data;
-        }
-        
-        $this->_data = $data;
-        return $this;
-    }
-    
-    public function is_new_record()
-    {
-        return is_null($this->id);
-    }
-    
 }
