@@ -111,8 +111,7 @@ class Auth {
 			return FALSE;
 		}
 
-		$this->_current_user = $user;
-		get_instance()->session->set_userdata('user_id', $user->id);
+		$this->authenticate_user($user);
 		return TRUE;
 	}
 
